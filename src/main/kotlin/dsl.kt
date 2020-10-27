@@ -8,5 +8,7 @@ infix fun Expr.tuple(b: Expr): Expr = Expr.Tuple(this, b)
 fun tuple(a: Expr, b: Expr): Expr = a.tuple(b)
 
 fun String.t() = Expr.Thunk(this)
+@JvmName("t1")
+fun t(str: String) = Expr.Thunk(str)
 fun l(name: String, body: Expr) = Expr.Lambda(name, body)
 fun l(name: String, body: (Expr) -> Expr) = Expr.Lambda(name, body(name.t()))

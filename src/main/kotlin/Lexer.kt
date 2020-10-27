@@ -3,15 +3,21 @@ package dev.mee42
 import dev.mee42.TokenType.*
 import java.util.regex.Pattern.compile
 
-enum class TokenType { IDENTIFIER, NUMBER, LAMBDA, LPAREN, RPAREN, ARROW }
+enum class TokenType { IDENTIFIER, NUMBER, LAMBDA, LPAREN, RPAREN, ARROW, COMMA, ASSIGN, SEMICOLON, LBRACE, RBRACE, KEYWORD_MATCH }
 
 val matches = mapOf(
-        compile("""^[a-z]+""") to IDENTIFIER,
-        compile("""^[0-9]+""") to NUMBER,
-        compile("""^(\\)|(λ)""") to LAMBDA,
-        compile("""^\(""") to LPAREN,
-        compile("""^\)""") to RPAREN,
-        compile("""^->""") to ARROW
+    compile("^match") to KEYWORD_MATCH,
+    compile("""^[a-z]+""") to IDENTIFIER,
+    compile("""^[0-9]+""") to NUMBER,
+    compile("""^(\\)|(λ)""") to LAMBDA,
+    compile("""^\(""") to LPAREN,
+    compile("""^\)""") to RPAREN,
+    compile("""^->""") to ARROW,
+    compile("""^,""") to COMMA,
+    compile("""^=""") to ASSIGN,
+    compile("""^;""") to SEMICOLON,
+    compile("""^\{""") to LBRACE,
+    compile("""^}""") to RBRACE
 )
 data class Token(val span: String, val type: TokenType)
 

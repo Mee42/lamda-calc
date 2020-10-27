@@ -47,6 +47,8 @@ inline fun <reified T: Throwable> shouldThrow(block: () -> Unit): T {
 }
 val unit = Expr.UnitExpr
 
+fun parse(str: String) = parse(lex(str))!!
+
 class EvaluatorTests {
     @Test
     fun `unit value is constant`() {
@@ -103,6 +105,23 @@ class EvaluatorTests {
         Pretty.reset() // otherwise the rest of the indentation gets screwed up
     }
     @Test
+    fun `properly eliminating ScopedVariables when it is only used after shadowed`(){
+        trimOutUnusedScopeContexts(Expr.ScopedExpr("a", Expr.IntExpr(1),
+            Expr.ScopedExpr("a", Expr.IntExpr(2),
+                    t("a")
+                )
+            )) assertEq Expr.ScopedExpr("a", Expr.IntExpr(2),
+                    t("a")
+                )
+    }
+    @Test
+    fun `simpler recursive id evaluation`(){
+        env {
+            val id by bind(l("a") { it })
+            eval(id ap tuple(unit, id)) assertEq tuple(unit, l("a") { it })
+        }
+    }
+    @Test
     fun `recursive id evaluation`(){
         env {
             val id by bind(l("a") { it })
@@ -132,4 +151,48 @@ class EvaluatorTests {
             )
         )
     }
+    @Test
+    fun `matching all values and binding to thunk`(){
+        val expr = parse("match 7 { x -> 3 }")
+        eval(expr, weak = true) assertEq Expr.IntExpr(3)
+    }
+    @Test
+    fun `matching all values and using as thunk`(){
+        eval(parse("match 7 { x -> x }"), weak = true) assertEq Expr.IntExpr(7)
+    }
+    @Test
+    fun `matching on integer value`(){
+        eval(parse("match 7 { 6 -> 0; 7 -> 1; 8 -> 2 }"), weak = true) assertEq Expr.IntExpr(1)
+    }
+    @Test
+    fun `pattern matching opening a tuple`(){
+        eval(parse("match (7, 6) { (7, 6) -> 1; x -> (); }"), weak = true) assertEq Expr.IntExpr(1)
+        eval(parse("match (7, 6) { (8, x) -> x; (7, x) -> x }"), weak = true) assertEq Expr.IntExpr(6)
+    }
+    @Test
+    fun `multiple tuples`(){
+        eval(parse("match ((1, 2), 3) { ((1, x), 3) -> x; y -> 7 }"), weak = true) assertEq Expr.IntExpr(2)
+    }
+    @Test
+    fun `unwrapping multiple values`(){
+        eval(eval(parse("match ((1, 2), 3) { ((a, b), c) -> ((1, c), (b, a)); }"), weak = true)) assertEq parse("((1, 3), (2, 1))")
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
